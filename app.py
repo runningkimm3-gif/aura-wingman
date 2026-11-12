@@ -25,6 +25,14 @@ st.markdown("""
         border: 1px solid rgba(239, 68, 68, 0.5);
         box-shadow: 0 20px 50px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
+    .info-box {
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 12px;
+        padding: 16px;
+        margin: 12px 0;
+        font-size: 14px;
+    }
     .stTextInput > div > div > input, .stTextArea > div > div > textarea {
         background: rgba(255, 255, 255, 0.05) !important;
         color: white !important;
@@ -62,7 +70,7 @@ def get_ai_response(prompt):
     
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     data = {
-        "model": "llama-3.3-70b-versatile",
+        "model": "llama3-70b-8192",
         "messages": [
             {"role": "system", "content": "You are a street-smart, Gen-Z dating coach based in Yangon, Myanmar. Speak in casual English, internet slang (rn, ngl, fr, sus, rizz), and Burmlish. Chill, helpful, never robotic."},
             {"role": "user", "content": prompt}
@@ -71,7 +79,7 @@ def get_ai_response(prompt):
     }
     
     try:
-        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=data, timeout=10)
+        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=data, timeout=15)
         if response.status_code == 200:
             return response.json()["choices"][0]["message"]["content"]
         return f"⚠️ AI Error: {response.status_code}"
@@ -92,22 +100,41 @@ with tab1:
 
 with tab2:
     st.markdown("### Consent-based Profile Vibe Check")
-    profile_info = st.text_area("Paste public bio text", placeholder="e.g., 'Coffee addict ☕ | Travel 🌏'")
-    if st.button("Scan Footprint"):
+    
+    st.markdown("""
+    <div class="info-box">
+        <strong>📋 What to copy:</strong><br>
+        • Instagram/Facebook bio text<br>
+        • Recent post captions (last 6-12 months)<br>
+        • Story highlights descriptions<br>
+        • Any public "About" sections<br><br>
+        <strong>⏰ For Timeline Analysis:</strong> Include dates or years when posts were made (e.g., "Jan 2023: Beach trip", "Dec 2023: New job!")
+    </div>
+    """, unsafe_allow_html=True)
+    
+    analysis_type = st.radio("Choose analysis type:", ["Quick Vibe Check", "Timeline Analysis (Year-by-Year)"])
+    
+    profile_info = st.text_area("Paste the profile text here", placeholder="Example:\nBio: Coffee addict ☕ | Travel 🌏\n\nJan 2022: Started gym\nJun 2022: Trip to Thailand\nDec 2022: New job at tech company\nMar 2023: Got a dog\nAug 2023: Breakup posts\nNov 2023: 'New beginnings' caption")
+    
+    if st.button("Analyze Profile"):
         if profile_info:
-            with st.spinner("Scanning..."):
-                prompt = f"Analyze this public profile and give a casual vibe check. Interests? Red flags? Gen-Z/Burmlish style: {profile_info}"
+            with st.spinner("Scanning public data..."):
+                if analysis_type == "Quick Vibe Check":
+                    prompt = f"Analyze this public profile and give a casual vibe check. What are their interests? Any red flags? What icebreakers would work? Keep it Gen-Z/Burmlish style: {profile_info}"
+                else:
+                    prompt = f"Analyze this profile TIMELINE year-by-year. Show how their interests, lifestyle, and vibe evolved over time. Point out patterns, major life changes, and what this says about them. Format as a timeline with years. Keep it Gen-Z/Burmlish style: {profile_info}"
+                
                 result = get_ai_response(prompt)
                 st.markdown(f'<div class="glass-panel">{result.replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
 
 with tab3:
-    st.markdown("### Scam & Catfish Shield")
-    scam_text = st.text_area("Paste suspicious message", placeholder="e.g., Hey bro I need urgent help with crypto")
+    st.markdown("### Real-time Scam & Catfish Shield")
+    scam_text = st.text_area("Paste a suspicious message you received", placeholder="e.g., Hey bro I need urgent help with crypto investment, click this link")
     if st.button("Analyze Risk"):
         if scam_text:
-            with st.spinner("Running scan..."):
-                prompt = f"Analyze for romance scam, catfish, or phishing red flags. Be direct, warn if sus, explain WHY. Gen-Z/Burmlish style: '{scam_text}'"
+            with st.spinner("Running heuristic & AI scan..."):
+                prompt = f"Analyze this message for romance scam, catfish, or phishing red flags. Be direct, warn the user if it's sus, and explain WHY. Keep it Gen-Z/Burmlish style: '{scam_text}'"
                 result = get_ai_response(prompt)
                 st.markdown(f'<div class="glass-panel alert">{result.replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
 
-st.markdown("<br><br><p style='text-align: center; color: #64748b; font-size: 12px;'>Built with ✨ for ethical digital wingman duties.</p>", unsafe_allow_html=True)
+st.markdown("<br><br><p style='text-align: center; color: #64748b; font-size: 12px;'>Built with ✨ for ethical, privacy-first digital wingman duties.</p>", unsafe_allow_html=True)
